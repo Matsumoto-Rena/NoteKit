@@ -1,0 +1,6 @@
+../Core/Src/NoteKit.c:30:6:NoteKit_TickHandler	9
+../Core/Src/NoteKit.c:47:5:to_midi_index	1
+../Core/Src/NoteKit.c:55:6:Set_Frequences	3
+../Core/Src/NoteKit.c:86:6:Set_Tempo	1
+../Core/Src/NoteKit.c:101:6:Set_Buzzer	1
+../Core/Src/NoteKit.c:112:6:PlayNote	13
