@@ -4,8 +4,8 @@
  *  Created on: Oct 8, 2025
  *      Author: m-ren
  */
-
 #include "NoteKit.h"
+#include "notekit_score_lilac.h"
 // --- 楽譜データの定義 ---
 // パート1：主旋律
 const ScoreNote part1_melody[] = {

@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "NoteKit.h"
+#include "notekit_score_lilac.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/

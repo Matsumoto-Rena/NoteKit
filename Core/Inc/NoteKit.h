@@ -62,17 +62,6 @@ typedef enum {
 
 } Duration;
 
-extern uint16_t BPM;
-typedef struct {
-    float whole;          // 全音符・全休符の長さ
-    float half;           // 2分音符・2分休符の長さ
-    float quarter;        // 4分音符・4分休符の長さ
-    float eighth;          // 8分音符・8分休符の長さ
-    float eighth_triplet;  // 8分音符の三連符
-    float sixteenth;      // 16分音符・16分休符の長さ
-    float thirty_second;  // 32分音符・32分休符の長さ
-} DurationType;
-
 // 楽譜の1音を表す構造体
 typedef struct {
     PitchClass pitch;
@@ -96,18 +85,7 @@ typedef struct {
 extern int score_index;
 extern float frequences[PITCH_COUNT][NUM_OCTAVES];
 
-extern const ScoreNote part1_melody[];
-extern const ScoreNote part2_bass[];
-extern const ScoreNote part3_bass[];
-extern const ScoreNote part4_bass[];
-
-extern const int part1_len;
-extern const int part2_len;
-extern const int part3_len;
-extern const int part4_len;
-
 void NoteKit_Init();
-void Set_Frequences();
 void Set_Tempo(uint8_t bpm);
 void Set_Buzzer(uint8_t buzzer_id, uint8_t tim_clock_MHz, TIM_HandleTypeDef* htim, uint32_t tim_channel);
 
@@ -116,6 +94,5 @@ bool NoteKit_IsPlaying(uint8_t buzzer_id);
 void NoteKit_SetPart(uint8_t channel_id, const ScoreNote* score, int length, bool loop);
 uint32_t get_duration_ms(Duration type);
 void NoteKit_SequencerUpdate(void);
-void Sequencer_Update(void);
 
 #endif /* INC_NOTEKIT_H_ */

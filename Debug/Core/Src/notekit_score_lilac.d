@@ -28,7 +28,8 @@ Core/Src/notekit_score_lilac.o: ../Core/Src/notekit_score_lilac.c \
  ../Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_tim.h \
  ../Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_tim_ex.h \
  ../Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_uart.h \
- ../Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_uart_ex.h
+ ../Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_uart_ex.h \
+ ../Core/Inc/notekit_score_lilac.h
 ../Core/Inc/NoteKit.h:
 ../Core/Inc/main.h:
 ../Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal.h:
@@ -60,3 +61,4 @@ Core/Src/notekit_score_lilac.o: ../Core/Src/notekit_score_lilac.c \
 ../Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_tim_ex.h:
 ../Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_uart.h:
 ../Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_uart_ex.h:
+../Core/Inc/notekit_score_lilac.h:

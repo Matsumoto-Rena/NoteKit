@@ -10,9 +10,7 @@
 
 float frequences[PITCH_COUNT][NUM_OCTAVES];
 Buzzer buzzer[MAX_NUM_BUZZERS];
-uint8_t num_buzzers;
 uint16_t current_bpm = 120;
-DurationType duration_type = {2000, 1000, 500, 250, 125, 62.5};
 int score_index = 0;
 
 
@@ -27,7 +25,7 @@ int score_index = 0;
 void NoteKit_TickHandler(void) {
     uint32_t current_time = HAL_GetTick();
 
-    for (int i = 0; i < num_buzzers; i++) {
+    for (int i = 0; i < MAX_NUM_BUZZERS; i++) {
         // 演奏中で、かつ終了時刻を過ぎていたら
         if (buzzer[i].is_playing && ((int32_t)(current_time - buzzer[i].end_time_ms) >= 0)) {
             // 音を止める
@@ -38,6 +36,7 @@ void NoteKit_TickHandler(void) {
     }
 }
 
+
 /**
  * @brief  指定したサウンドチャンネルが現在、音を再生中（自動停止待ち）かを確認します。
  * @note   主にシーケンサーが、次の音符へ進むタイミングを判断するために使用します。
@@ -47,9 +46,10 @@ void NoteKit_TickHandler(void) {
  */
 bool NoteKit_IsPlaying(uint8_t buzzer_id)
 {
-    if (buzzer_id >= num_buzzers) return false;
+    if (buzzer_id >= MAX_NUM_BUZZERS) return false;
     return buzzer[buzzer_id].is_playing;
 }
+
 
 /**
  * @brief  PitchClass とオクターブ番号から、標準MIDIノート番号を計算します。
@@ -63,10 +63,15 @@ int to_midi_index(PitchClass pc, int real_octave) {
     return (real_octave + 1) * 12 + pc;
 }
 
-/*
- *
+
+/**
+ * @brief  [内部関数] 周波数テーブル（`frequences`配列）を事前計算して初期化します。
+ * @note   A4=440Hzの国際標準ピッチに基づき、12平均律で全オクターブの周波数を計算します。
+ * @note   ライブラリの初期化時に一度だけ呼び出す必要があります。
+ * @param  None
+ * @retval None
  */
-void Set_Frequences() {
+static void Set_Frequences() {
     // 基準音の定義
     const double A4_FREQUENCY = 440.0;
 
@@ -94,19 +99,40 @@ void Set_Frequences() {
     }
 }
 
-/*
- *
+
+/**
+ * @brief  シーケンサーのグローバルテンポを設定します。
+ * @note   この値は `get_duration_ms` 関数で音符の長さを計算する際に使用されます。
+ * @param  bpm : 1分間あたりの拍数 (Beats Per Minute)
+ * @retval None
  */
 void Set_Tempo(uint8_t bpm) {
 	current_bpm = bpm;
 }
 
+
+/**
+ * @brief  NoteKit ライブラリを初期化します。
+ * @brief  内部で使用する周波数テーブルの計算などを行います。
+ * @note   プログラムの起動時に一度だけ呼び出してください。
+ * @param  None
+ * @retval None
+ */
 void NoteKit_Init() {
 	Set_Frequences();
 }
 
-/*
- *
+
+/**
+ * @brief  NoteKit のサウンドチャンネルを初期化し、タイマを割り当てます。
+ * @brief  NoteKit_Init() の後に、使用するチャンネルの数だけ呼び出してください。
+ * @note   PWM出力は、この関数呼び出し時に開始されます。
+ * @note   この関数は、`num_buzzers` 変数の値を更新して、有効なチャンネル数を管理します。
+ * @param  buzzer_id: 初期化するチャンネルID (0 から順番に呼び出す必要があります)
+ * @param  tim_clock_MHz: このタイマのクロック周波数 (MHz単位)。例: 8
+ * @param  htim: PWM出力に使用するタイマのハンドル (例: &htim16)
+ * @param  tim_channel: PWM出力に使用するタイマチャンネル (例: TIM_CHANNEL_1)
+ * @retval None
  */
 void Set_Buzzer(uint8_t buzzer_id, uint8_t tim_clock_MHz, TIM_HandleTypeDef* htim, uint32_t tim_channel) {
 
@@ -114,9 +140,9 @@ void Set_Buzzer(uint8_t buzzer_id, uint8_t tim_clock_MHz, TIM_HandleTypeDef* hti
 	buzzer[buzzer_id].tim_clock_MHz = tim_clock_MHz;
 	buzzer[buzzer_id].tim_handle = htim;
 	buzzer[buzzer_id].tim_channel = tim_channel;
-	num_buzzers++;
 
 }
+
 
 /**
  * @brief 指定したチャンネルで音を鳴らします（ノンブロッキング）。
@@ -127,7 +153,7 @@ void Set_Buzzer(uint8_t buzzer_id, uint8_t tim_clock_MHz, TIM_HandleTypeDef* hti
 void NoteKit_NoteOn(uint8_t channel_id, uint32_t frequency_hz, uint32_t duration_ms)
 {
     // 無効なチャンネルIDなら何もしない
-    if (channel_id >= num_buzzers) {
+    if (channel_id >= MAX_NUM_BUZZERS) {
         return;
     }
 
@@ -188,53 +214,12 @@ void NoteKit_NoteOn(uint8_t channel_id, uint32_t frequency_hz, uint32_t duration
     }
 }
 
-/*
- *
- */
-void Sequencer_Update(void) {
-    // 全てのチャンネル（ブザー）をチェック
-    for (int i = 0; i < num_buzzers; i++) {
-        // このチャンネルが有効で、かつ演奏を終えている場合
-        if (buzzer[i].part_is_active && !buzzer[i].is_playing) {
-
-            // このチャンネルの楽譜の、次の音へ進む
-            if (buzzer[i].score_index < buzzer[i].score_length) {
-                // これから鳴らす音の情報を、このチャンネル専用の楽譜から取得
-                const ScoreNote* next_note = &buzzer[i].assigned_score[buzzer[i].score_index];
-
-                uint32_t frequency_to_play = 0; // デフォルトは0Hz (休符)
-
-                // もし、楽譜の音名が休符でなければ、周波数を計算する
-                if (next_note->pitch != PITCH_REST) {
-                    frequency_to_play = (uint32_t)frequences[next_note->octave][next_note->pitch];
-                }
-
-                // 長さを計算する
-                uint32_t duration_ms = get_duration_ms(next_note->duration_type);
-
-                // PlayNoteには、休符なら0、そうでなければ計算した周波数が渡される
-                NoteKit_NoteOn(i, frequency_to_play, duration_ms);
-
-                // このチャンネルの再生位置を一つ進める
-                buzzer[i].score_index++;
-            }
-            else if (buzzer[i].loop) {
-                // ループ再生なら、再生位置を先頭に戻す
-                buzzer[i].score_index = 0;
-            }
-            else {
-                // ループしないなら、このパートを非アクティブにする
-                buzzer[i].part_is_active = false;
-            }
-        }
-    }
-}
 
 /**
  * @brief 指定したチャンネルに演奏するパート（楽譜）を設定します。
  */
 void NoteKit_SetPart(uint8_t channel_id, const ScoreNote* score, int length, bool loop) {
-    if (channel_id >= num_buzzers) return;
+    if (channel_id >= MAX_NUM_BUZZERS) return;
 
     buzzer[channel_id].assigned_score = score;
     buzzer[channel_id].score_length = length;
@@ -242,6 +227,7 @@ void NoteKit_SetPart(uint8_t channel_id, const ScoreNote* score, int length, boo
     buzzer[channel_id].part_is_active = true;
     buzzer[channel_id].loop = loop;
 }
+
 
 /**
  * @brief 長さの種類(Duration enum)から、現在のBPMに基づいた具体的な時間(ms)を計算して返す
@@ -283,12 +269,18 @@ uint32_t get_duration_ms(Duration type) {
 	return rounded_duration_ms;
 }
 
+
 /**
- * @brief 音楽シーケンサーを1ステップ進めます。mainのwhile(1)から呼び出します。
+ * @brief  マルチトラック・シーケンサーのメイン更新関数です。
+ * @note   main() の while(1) ループから、できるだけ頻繁に呼び出してください。
+ * @note   この関数は、各チャンネルの状態を監視し、
+ * @note   前の音（または休符）が終わっていたら、楽譜の次の音を再生します。
+ * @param  None
+ * @retval None
  */
 void NoteKit_SequencerUpdate(void) {
     // 全てのチャンネル（ブザー）をチェック
-    for (int i = 0; i < num_buzzers; i++) {
+    for (int i = 0; i < MAX_NUM_BUZZERS; i++) {
         // このチャンネルが有効で、かつ演奏を終えている（次の音を鳴らす準備ができている）場合
         if (buzzer[i].part_is_active && !buzzer[i].is_playing) {
 
