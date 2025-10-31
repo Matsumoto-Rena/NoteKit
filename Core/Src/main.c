@@ -97,14 +97,19 @@ int main(void)
   MX_TIM1_Init();
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
-  Set_Frequences();
+  NoteKit_Init();
   Set_Tempo(150);
   Set_Buzzer(0, 8, &htim1, TIM_CHANNEL_1);
   Set_Buzzer(1, 8, &htim1, TIM_CHANNEL_2);
   Set_Buzzer(2, 8, &htim3, TIM_CHANNEL_1);
   Set_Buzzer(3, 8, &htim3, TIM_CHANNEL_2);
-  Set_Buzzer(4, 8, &htim1, TIM_CHANNEL_3);
-//  HAL_TIM_Base_Start_IT(&htim6);
+//  Set_Buzzer(4, 8, &htim1, TIM_CHANNEL_3);
+
+  // 各チャンネルに楽譜パートをセット
+  NoteKit_SetPart(0, part1_melody, part1_len, true); // チャンネル0はメロディをループ再生
+  NoteKit_SetPart(1, part2_bass, part2_len, true);  // チャンネル1はベースをループ再生
+  NoteKit_SetPart(2, part3_bass, part3_len, true);  // チャンネル1はベースをループ再生
+  NoteKit_SetPart(3, part4_bass, part4_len, true);  // チャンネル1はベースをループ再生
 
   /* USER CODE END 2 */
 
@@ -112,7 +117,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  PlayNote(0, 440, 1000); // 440Hzを1秒間鳴らすテスト
+	  NoteKit_SequencerUpdate();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

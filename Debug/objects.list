@@ -1,5 +1,7 @@
 "./Core/Src/NoteKit.o"
 "./Core/Src/main.o"
+"./Core/Src/notekit_score_lilac.o"
+"./Core/Src/score_lilac.o"
 "./Core/Src/stm32f3xx_hal_msp.o"
 "./Core/Src/stm32f3xx_it.o"
 "./Core/Src/syscalls.o"
